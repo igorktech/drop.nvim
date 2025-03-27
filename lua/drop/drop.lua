@@ -13,6 +13,8 @@ M.timer = nil
 ---@field buf? integer
 ---@field speed integer
 ---@field id? integer
+---@field tail_positions table<integer, {row: number, col: number}>
+---@field tail_length integer
 local Drop = {}
 Drop.__index = Drop
 
@@ -23,6 +25,7 @@ function Drop.new(buf)
   local self = setmetatable({}, Drop)
   self.buf = buf
   self.id = nil
+  self.tail_positions = {}
   self:init()
   return self
 end
@@ -40,31 +43,78 @@ function Drop:init()
   self.row = 0
   self.col = math.random(0, vim.go.columns - vim.fn.strwidth(self.symbol))
   self.speed = math.random(1, 2)
+  self.tail_positions = {}
+
+  local base = config.options.tail_length or 10
+  local delta = config.options.tail_delta or 0
+  local offset = delta > 0 and math.random(math.max(-delta, -base), delta) or 0
+  self.tail_length = base + offset
+
+
 end
 
 function Drop:show()
-  -- FIXME: line value outside of range
-  local ok, id = pcall(vim.api.nvim_buf_set_extmark, self.buf, config.ns, math.floor(self.row), 0, {
-    virt_text = { { self.symbol, self.hl_group } },
-    virt_text_win_col = self.col,
-    id = self.id,
-  })
-  if ok then
-    self.id = id
-  else
-    self:init()
+  -- Draw the tail if enabled
+  if config.options.tail then
+    for i, pos in ipairs(self.tail_positions) do
+      -- Only draw tail if position is within valid range
+      if pos.row >= 0 and pos.row < vim.go.lines and pos.col >= 0 and pos.col < vim.go.columns then
+        local tail_hl = self.hl_group .. "Tail"  -- Example: adjust as needed
+        vim.api.nvim_buf_set_extmark(self.buf, config.ns, math.floor(pos.row), 0, {
+          virt_text = { { self.symbol, tail_hl } },
+          virt_text_win_col = pos.col,
+          virt_text_pos = "overlay",
+        })
+      end
+    end
+  end
+  
+  -- Only draw drop if position is within valid range
+  if self.row >= 0 and self.row < vim.go.lines and self.col >= 0 and self.col < vim.go.columns then
+    local ok, id = pcall(vim.api.nvim_buf_set_extmark, self.buf, config.ns, math.floor(self.row), 0, {
+      virt_text = { { self.symbol, self.hl_group } },
+      virt_text_win_col = self.col,
+      id = self.id,
+    })
+    if ok then
+      self.id = id
+    else
+      self:init()
+    end
   end
 end
 
 function Drop:is_visible()
-  return self.col >= 0 and (self.col <= vim.go.columns - vim.fn.strwidth(self.symbol)) and self.row < vim.go.lines
+  return self.col >= 0 and (self.col <= vim.go.columns - vim.fn.strwidth(self.symbol)) and self.row >= 0 and self.row < vim.go.lines
 end
 
 function Drop:update()
+  -- Update tail length over time
+  if config.options.tail_delta and config.options.tail_dynamic then
+    local base = self.tail_length
+    local delta = config.options.tail_delta
+    -- Adjust tail length with a slight random offset each update.
+    local offset = delta > 0 and math.random(math.max(-delta, -base), delta) or 0
+    self.tail_length = base + offset
+  end
+
+  -- Update drop position
   local dx = math.random(0, 2) - 1
   self.row = self.row + self.speed * 0.5
   if math.floor(self.row) == self.row then
-    self.col = self.col + dx
+    local new_col = self.col + dx
+    -- Only update column if it would be in valid range
+    if new_col >= 0 and new_col < vim.go.columns - vim.fn.strwidth(self.symbol) then
+      self.col = new_col
+    end
+  end
+
+  -- Update tail positions only if tail is enabled
+  if config.options.tail then
+    table.insert(self.tail_positions, 1, { row = self.row, col = self.col })
+    if #self.tail_positions > self.tail_length then
+      table.remove(self.tail_positions)
+    end
   end
 
   if not self:is_visible() then
@@ -123,6 +173,9 @@ function M.update()
   if M.timer == nil then
     return
   end
+
+  -- Clear previous extmarks
+  vim.api.nvim_buf_clear_namespace(M.buf, config.ns, 0, -1)
 
   M.ticks = M.ticks + 1
   local pct = math.min(vim.go.lines, M.ticks) / vim.go.lines
