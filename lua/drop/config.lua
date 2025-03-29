@@ -36,10 +36,8 @@ M.defaults = {
   screensaver = 1000 * 60 * 5, -- show after 5 minutes. Set to false, to disable
   filetypes = { "dashboard", "alpha", "ministarter" }, -- will enable/disable automatically for the following filetypes
   winblend = 100, -- winblend for the drop window
-  tail = true, -- enable/disable tail
-  tail_length = 4, -- length of the drop's tail
-  tail_delta = 1, -- how many tail length to increase/decrease
-  tail_dynamic = true, -- dynamically change the tail length based on the drop's speed
+  tail = { enable = true, length = 5, delta = 5, dynamic = true }, -- enable/disable tail
+  wind = { enable = true, speed = 10, direction = "both" }, -- enable/disable wind effect
 }
 
 M.ns = vim.api.nvim_create_namespace("drop")

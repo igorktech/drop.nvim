@@ -45,21 +45,23 @@ function Drop:init()
   self.speed = math.random(1, 2)
   self.tail_positions = {}
 
-  local base = config.options.tail_length or 10
-  local delta = config.options.tail_delta or 0
-  local offset = delta > 0 and math.random(math.max(-delta, -base), delta) or 0
-  self.tail_length = base + offset
-
-
+  if config.options.tail and config.options.tail.enable then
+    local base = config.options.tail.length or 5
+    local delta = config.options.tail.delta or 0
+    local offset = delta > 0 and math.random(math.max(-delta, -base), delta) or 0
+    self.tail_length = base + offset
+  else
+    self.tail_length = 0
+  end
 end
 
 function Drop:show()
   -- Draw the tail if enabled
-  if config.options.tail then
+  if config.options.tail and config.options.tail.enable then
     for i, pos in ipairs(self.tail_positions) do
       -- Only draw tail if position is within valid range
       if pos.row >= 0 and pos.row < vim.go.lines and pos.col >= 0 and pos.col < vim.go.columns then
-        local tail_hl = self.hl_group .. "Tail"  -- Example: adjust as needed
+        local tail_hl = self.hl_group .. "Tail"
         vim.api.nvim_buf_set_extmark(self.buf, config.ns, math.floor(pos.row), 0, {
           virt_text = { { self.symbol, tail_hl } },
           virt_text_win_col = pos.col,
@@ -90,16 +92,29 @@ end
 
 function Drop:update()
   -- Update tail length over time
-  if config.options.tail_delta and config.options.tail_dynamic then
+  if config.options.tail and config.options.tail.enable and config.options.tail.dynamic then
     local base = self.tail_length
-    local delta = config.options.tail_delta
+    local delta = config.options.tail.delta or 0
     -- Adjust tail length with a slight random offset each update.
     local offset = delta > 0 and math.random(math.max(-delta, -base), delta) or 0
     self.tail_length = base + offset
   end
 
   -- Update drop position
-  local dx = math.random(0, 2) - 1
+  -- Adjust drop position based on wind effect
+  local dx = 0
+  if config.options.wind and config.options.wind.enable then
+    local speed = config.options.wind.speed or 10
+    local direction = config.options.wind.direction or "both"
+    if direction == "both" then
+      dx = math.random(-speed, speed)
+    elseif direction == "left" then
+      dx = -math.random(0, speed)
+    elseif direction == "right" then
+      dx = math.random(0, speed)
+    end
+  end
+
   self.row = self.row + self.speed * 0.5
   if math.floor(self.row) == self.row then
     local new_col = self.col + dx
@@ -110,7 +125,7 @@ function Drop:update()
   end
 
   -- Update tail positions only if tail is enabled
-  if config.options.tail then
+  if config.options.tail and config.options.tail.enable then
     table.insert(self.tail_positions, 1, { row = self.row, col = self.col })
     if #self.tail_positions > self.tail_length then
       table.remove(self.tail_positions)

@@ -139,5 +139,26 @@ use({
   screensaver = 1000 * 60 * 5, -- show after 5 minutes. Set to false, to disable
   filetypes = { "dashboard", "alpha", "ministarter" }, -- will enable/disable automatically for the following filetypes
   winblend = 100, -- winblend for the drop window
+  tail = { enable = true, length = 5, delta = 5, dynamic = true }, -- enable/disable tail
+  wind = { enable = true, speed = 10, direction = "both" }, -- enable/disable wind effect
 }
 ```
+
+### Tail Configuration
+
+The `tail` option controls the trailing effect behind each drop:
+
+- `enable` (boolean): Enable/disable the tail effect
+- `length` (number): Base length of the tail (default: 5)
+- `delta` (number): Maximum variation in tail length (default: 5)
+- `dynamic` (boolean): Whether tail length should change dynamically over time
+
+### Wind Configuration
+
+The `wind` option controls the horizontal movement of drops:
+
+- `enable` (boolean): Enable/disable the wind effect
+- `speed` (number): Maximum speed of horizontal movement (default: 10)
+- `direction` (string): Wind direction - "both", "left", or "right" (default: "both")
+
+## 🎨 Customization
