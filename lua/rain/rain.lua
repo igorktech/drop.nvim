@@ -1,11 +1,11 @@
-local config = require("drop.config")
+local config = require("rain.config")
 
 local M = {}
 
 ---@type vim.loop.Timer?
 M.timer = nil
 
----@class Drop
+---@class Rain
 ---@field symbol string
 ---@field hl_group string
 ---@field row integer
@@ -15,14 +15,14 @@ M.timer = nil
 ---@field id? integer
 ---@field tail_positions table<integer, {row: number, col: number}>
 ---@field tail_length integer
-local Drop = {}
-Drop.__index = Drop
+local Rain = {}
+Rain.__index = Rain
 
----@type table<integer, Drop>
-Drop.drops = {}
+---@type table<integer, Rain>
+Rain.drops = {}
 
-function Drop.new(buf)
-  local self = setmetatable({}, Drop)
+function Rain.new(buf)
+  local self = setmetatable({}, Rain)
   self.buf = buf
   self.id = nil
   self.tail_positions = {}
@@ -30,7 +30,7 @@ function Drop.new(buf)
   return self
 end
 
-function Drop:init()
+function Rain:init()
   local theme = config.get_theme()
   ---@type string[]
   local symbols = vim.tbl_map(function(symbol)
@@ -39,7 +39,7 @@ function Drop:init()
   local colors = vim.tbl_keys(theme.colors)
 
   self.symbol = symbols[math.random(1, #symbols)]
-  self.hl_group = "Drop" .. math.random(1, #colors) .. (math.random(1, 3) == 1 and "Bold" or "")
+  self.hl_group = "Rain" .. math.random(1, #colors) .. (math.random(1, 3) == 1 and "Bold" or "")
   self.row = 0
   self.col = math.random(0, vim.go.columns - vim.fn.strwidth(self.symbol))
   self.speed = math.random(1, 2)
@@ -55,7 +55,7 @@ function Drop:init()
   end
 end
 
-function Drop:show()
+function Rain:show()
   -- Draw the tail if enabled
   if config.options.tail and config.options.tail.enable then
     for i, pos in ipairs(self.tail_positions) do
@@ -86,11 +86,11 @@ function Drop:show()
   end
 end
 
-function Drop:is_visible()
+function Rain:is_visible()
   return self.col >= 0 and (self.col <= vim.go.columns - vim.fn.strwidth(self.symbol)) and self.row >= 0 and self.row < vim.go.lines
 end
 
-function Drop:update()
+function Rain:update()
   -- Update tail length over time
   if config.options.tail and config.options.tail.enable and config.options.tail.dynamic then
     local base = self.tail_length
@@ -177,7 +177,7 @@ function M.show()
       })
     end,
   })
-  vim.wo[M.win].winhighlight = "NormalFloat:Drop"
+  vim.wo[M.win].winhighlight = "NormalFloat:Rain"
   vim.wo[M.win].winblend = config.options.winblend
   M.ticks = 0
   M.timer = vim.loop.new_timer()
@@ -196,11 +196,11 @@ function M.update()
   local pct = math.min(vim.go.lines, M.ticks) / vim.go.lines
   local _target = pct * config.options.max
   vim.go.lazyredraw = true
-  while #Drop.drops < _target * math.random(80, 100) / 100 do
-    table.insert(Drop.drops, Drop.new(M.buf))
+  while #Rain.drops < _target * math.random(80, 100) / 100 do
+    table.insert(Rain.drops, Rain.new(M.buf))
   end
 
-  for _, drop in ipairs(Drop.drops) do
+  for _, drop in ipairs(Rain.drops) do
     drop:update()
   end
   vim.go.lazyredraw = false
@@ -221,7 +221,7 @@ function M.hide()
     pcall(vim.api.nvim_win_close, M.win, true)
     M.win = nil
     M.buf = nil
-    Drop.drops = {}
+    Rain.drops = {}
   end)
 end
 

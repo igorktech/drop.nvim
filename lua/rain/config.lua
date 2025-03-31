@@ -2,20 +2,20 @@ local M = {}
 
 local uv = vim.uv or vim.loop
 
----@class DropTheme
+---@class RainTheme
 ---@field symbols (string|fun():string)[]
 ---@field colors string[]
 
----@class ActiveDropTheme: DropTheme
+---@class ActiveRainTheme: RainTheme
 ---@field hl string[]
 
----@alias DropDate {month: number, day: number, year?:number}
+---@alias RainDate {month: number, day: number, year?:number}
 
----@class DropConfig
+---@class RainConfig
 M.defaults = {
-  ---@type DropTheme|string
+  ---@type RainTheme|string
   theme = "auto", -- when auto, it will choose a theme based on the date
-  ---@type ({theme: string}|DropDate|{from:DropDate, to:DropDate}|{holiday:"us_thanksgiving"|"easter"})[]
+  ---@type ({theme: string}|RainDate|{from:RainDate, to:RainDate}|{holiday:"us_thanksgiving"|"easter"})[]
   themes = {
     { theme = "new_year", month = 1, day = 1 },
     { theme = "valentines_day", month = 2, day = 14 },
@@ -40,9 +40,9 @@ M.defaults = {
   wind = { enable = true, speed = 10, direction = "both" }, -- enable/disable wind effect
 }
 
-M.ns = vim.api.nvim_create_namespace("drop")
+M.ns = vim.api.nvim_create_namespace("rain")
 
----@type DropConfig
+---@type RainConfig
 M.options = {}
 ---@type uv_timer_t
 M.timer = nil
@@ -51,7 +51,7 @@ M.screensaver = false
 
 function M.sleep()
   if M.screensaver then
-    require("drop").hide()
+    require("rain").hide()
   end
   if not M.timer then
     M.timer = uv.new_timer()
@@ -61,7 +61,7 @@ function M.sleep()
     0,
     vim.schedule_wrap(function()
       M.screensaver = true
-      require("drop").show()
+      require("rain").show()
     end)
   )
 end
@@ -103,19 +103,19 @@ function M.setup(opts)
 end
 
 function M.auto(buf)
-  require("drop").show()
+  require("rain").show()
   vim.api.nvim_create_autocmd("BufWipeout", {
     buffer = buf,
     callback = function()
-      require("drop").hide()
+      require("rain").hide()
     end,
   })
 end
 
----@return DropTheme
+---@return RainTheme
 function M.get_theme()
-  local Util = require("drop.util")
-  local themes = require("drop.themes")
+  local Util = require("rain.util")
+  local themes = require("rain.themes")
   if M.options.theme ~= "auto" then
     if type(M.options.theme) ~= "string" then
       return M.options.theme
