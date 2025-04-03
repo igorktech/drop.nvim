@@ -4,7 +4,7 @@ local year = os.date("*t").year
 
 -- Calculate the date of Easter on a given year via the computus method.
 -- https://en.wikipedia.org/wiki/Date_of_Easter
----@return DropDate
+---@return RainDate
 function M.calculate_easter()
   local a = year % 19
   local b = math.floor(year / 100)
@@ -22,7 +22,7 @@ function M.calculate_easter()
 end
 
 -- Calculate the date of US Thanksgiving on a given year.
----@return DropDate
+---@return RainDate
 function M.calculate_us_thanksgiving()
   local first_day_of_november = os.time({ year = year, month = 11, day = 1 })
   local first_weekday_of_november = os.date("*t", first_day_of_november).wday -- 1=Sunday, 2=Monday, ..., 7=Saturday

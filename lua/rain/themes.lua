@@ -1,4 +1,4 @@
----@type table<string,DropTheme>
+---@type table<string,RainTheme>
 local themes = {
   april_fools = {
     symbols = { "🤡", "🎭", "🃏", "🎉", "😂", "🙃", "🎈", "🎁", "🤣", "😜" },
@@ -23,6 +23,10 @@ local themes = {
   binary = {
     symbols = { "0", "1" },
     colors = { "#000000", "#FFFFFF", "#696969", "#A9A9A9", "#808080" },
+  },
+  blood = {
+    symbols = { "❦", "🩸", "❢", "●", "·", "⚰️", "💀", "🩸", "⚱️", "🫀"},
+    colors = { "#8B0000", "#B22222", "#DC143C", "#B40707", "#FFDEAD" },
   },
   bugs = {
     symbols = { "🐞", "🐜", "🪲", "🦗", "🕷️", "🕸️", "🐛" },
