@@ -87,7 +87,7 @@ function Rain:show()
 end
 
 function Rain:is_visible()
-  return self.col >= 0 and (self.col <= vim.go.columns - vim.fn.strwidth(self.symbol)) and self.row >= 0 and self.row < vim.go.lines
+  return self.row >= 0 and self.row < vim.go.lines
 end
 
 function Rain:update()
@@ -117,11 +117,7 @@ function Rain:update()
 
   self.row = self.row + self.speed * 0.5
   if math.floor(self.row) == self.row then
-    local new_col = self.col + dx
-    -- Only update column if it would be in valid range
-    if new_col >= 0 and new_col < vim.go.columns - vim.fn.strwidth(self.symbol) then
-      self.col = new_col
-    end
+    self.col = self.col + dx
   end
 
   -- Update tail positions only if tail is enabled
